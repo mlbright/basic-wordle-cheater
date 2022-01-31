@@ -1,6 +1,6 @@
 use clap::Parser;
 use regex::Regex;
-use std::{path::PathBuf, io::Read};
+use std::{io::Read, path::PathBuf};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -40,9 +40,8 @@ fn find_word<'a>(word_regex: &'a str, word_list: Vec<&'a str>) -> Option<Vec<&'a
 fn main() {
     let args = Args::parse();
     let word_regex = args.regex;
-    let mut contents= String::new();
-    let mut f = std::fs::File::open(args.dictionary)
-        .expect("Unable to read file");
+    let mut contents = String::new();
+    let mut f = std::fs::File::open(args.dictionary).expect("Unable to read file");
     f.read_to_string(&mut contents).expect("Unable to string");
     let word_list: Vec<&str> = contents.split('\n').collect();
     let result = find_word(&word_regex, word_list);
