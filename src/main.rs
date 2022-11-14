@@ -25,8 +25,8 @@ fn find_words<'a>(
     let inclusions = Regex::new(green).unwrap();
     let mut results: Vec<&str> = vec![];
     for word in word_list {
-        if exclusions.is_match(&word.to_lowercase())
-            && inclusions.is_match(&word.to_lowercase())
+        if exclusions.is_match(word)
+            && inclusions.is_match(word)
             && yellow
                 .chars()
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
@@ -47,22 +47,21 @@ fn construct_exclusion_regex(grey: &str, yellow: &str) -> String {
     lazy_static! {
         static ref YELLOW_LETTER_REGEX: Regex = Regex::new(r"\[([a-z]*)\]").unwrap();
     }
-    let s = YELLOW_LETTER_REGEX.replace_all(&re, |caps: &regex::Captures| {
-        format!("[^{}{}]", &caps[1], grey)
-    });
-    s.to_string()
+    YELLOW_LETTER_REGEX
+        .replace_all(&re, |caps: &regex::Captures| {
+            format!("[^{}{}]", &caps[1], grey)
+        })
+        .to_string()
 }
 
 fn main() {
     let args = Args::parse();
-    let five_letter_words = include_str!("five-letter-words");
-    let word_list = five_letter_words.split('\n').collect();
+    let five_letter_words = include_str!("five-letter-words").split('\n').collect();
     let regex_str: String = construct_exclusion_regex(&args.grey, &args.yellow);
-    let results = find_words(word_list, &regex_str, &args.yellow, &args.green);
-    match results {
+    match find_words(five_letter_words, &regex_str, &args.yellow, &args.green) {
         Some(words) => {
             for word in words {
-                println!("{}", word.to_lowercase());
+                println!("{}", word);
             }
         }
         None => println!("No results"),
