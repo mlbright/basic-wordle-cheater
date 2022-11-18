@@ -15,6 +15,18 @@ struct Args {
     yellow: String,
 }
 
+fn greens(word: &str, green: &str) -> bool {
+    for i in 0..5 {
+        if green.chars().nth(i) == Some('.') {
+            continue;
+        }
+        if word.chars().nth(i) != green.chars().nth(i) {
+            return false;
+        }
+    }
+    true
+}
+
 fn find_words<'a>(
     word_list: Vec<&'a str>,
     regex_str: &str,
@@ -22,15 +34,14 @@ fn find_words<'a>(
     green: &str,
 ) -> Option<Vec<&'a str>> {
     let exclusions = Regex::new(regex_str).unwrap();
-    let inclusions = Regex::new(green).unwrap();
     let mut results: Vec<&str> = vec![];
     for word in word_list {
         if exclusions.is_match(word)
-            && inclusions.is_match(word)
             && yellow
                 .chars()
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
                 .all(|c| word.contains(c))
+            && greens(word, green)
         {
             results.push(word);
         }
