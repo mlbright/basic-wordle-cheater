@@ -36,12 +36,12 @@ fn find_words<'a>(
     let exclusions = Regex::new(regex_str).unwrap();
     let mut results: Vec<&str> = vec![];
     for word in word_list {
-        if exclusions.is_match(word)
+        if greens(word, green)
+            && exclusions.is_match(word)
             && yellow
                 .chars()
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
                 .all(|c| word.contains(c))
-            && greens(word, green)
         {
             results.push(word);
         }
