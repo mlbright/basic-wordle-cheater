@@ -1,7 +1,14 @@
 use clap::Parser;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::include_str;
+
+macro_rules! regex {
+    ($re:literal $(,)?) => {{
+        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
+        RE.get_or_init(|| regex::Regex::new($re).unwrap())
+    }};
+}
 
 /// Simple program to cheat at Wordle
 #[derive(Parser, Debug)]
@@ -33,15 +40,15 @@ fn find_words<'a>(
     yellow: &str,
     green: &str,
 ) -> Option<Vec<&'a str>> {
-    let exclusions = Regex::new(regex_str).unwrap();
+    let exclusions_filter = Regex::new(regex_str).unwrap();
     let mut results: Vec<&str> = vec![];
     for word in word_list {
         if greens(word, green)
-            && exclusions.is_match(word)
             && yellow
                 .chars()
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
                 .all(|c| word.contains(c))
+            && exclusions_filter.is_match(word)
         {
             results.push(word);
         }
@@ -54,22 +61,26 @@ fn find_words<'a>(
 }
 
 fn construct_exclusion_regex(grey: &str, yellow: &str) -> String {
-    let re = yellow.to_owned();
-    lazy_static! {
-        static ref YELLOW_LETTER_REGEX: Regex = Regex::new(r"\[([a-z]*)\]").unwrap();
-    }
-    YELLOW_LETTER_REGEX
-        .replace_all(&re, |caps: &regex::Captures| {
-            format!("[^{}{}]", &caps[1], grey)
-        })
-        .to_string()
+    let re_str = yellow.to_owned();
+    let re = regex!(r"\[([a-z]*)\]");
+    re.replace_all(&re_str, |caps: &regex::Captures| {
+        format!("[^{}{}]", &caps[1], grey)
+    })
+    .to_string()
 }
+
+static FIVE_LETTER_WORDS: Lazy<Vec<&str>> =
+    Lazy::new(|| include_str!("five-letter-words").split('\n').collect());
 
 fn main() {
     let args = Args::parse();
-    let five_letter_words = include_str!("five-letter-words").split('\n').collect();
     let regex_str: String = construct_exclusion_regex(&args.grey, &args.yellow);
-    match find_words(five_letter_words, &regex_str, &args.yellow, &args.green) {
+    match find_words(
+        FIVE_LETTER_WORDS.to_vec(),
+        &regex_str,
+        &args.yellow,
+        &args.green,
+    ) {
         Some(words) => {
             for word in words {
                 println!("{}", word);
