@@ -37,6 +37,7 @@ fn greens(word: &str, green: &str) -> bool {
 fn find_words<'a>(
     word_list: Vec<&'a str>,
     regex_str: &str,
+    grey: &str,
     yellow: &str,
     green: &str,
 ) -> Option<Vec<&'a str>> {
@@ -49,6 +50,10 @@ fn find_words<'a>(
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
                 .all(|c| word.contains(c))
             && exclusions_filter.is_match(word)
+            && grey
+                .chars()
+                .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
+                .all(|c| !word.contains(c))
         {
             results.push(word);
         }
@@ -78,6 +83,7 @@ fn main() {
     match find_words(
         FIVE_LETTER_WORDS.to_vec(),
         &regex_str,
+        &args.grey,
         &args.yellow,
         &args.green,
     ) {
