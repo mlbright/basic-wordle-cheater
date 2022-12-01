@@ -33,19 +33,19 @@ fn find_words<'a>(
     yellow: &str,
     green: &str,
 ) -> Option<Vec<&'a str>> {
-    let exclusions_filter = Regex::new(yellow).unwrap();
+    let yellow_filter = Regex::new(yellow).unwrap();
     let mut results: Vec<&str> = vec![];
     for word in word_list {
         if greens(word, green)
-            && !exclusions_filter.is_match(word)
-            && yellow
-                .chars()
-                .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
-                .all(|c| word.contains(c))
             && grey
                 .chars()
                 .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
                 .all(|c| !word.contains(c))
+            && yellow_filter.is_match(word)
+            && yellow
+                .chars()
+                .filter(|c| c.is_alphanumeric() && !c.is_ascii_digit())
+                .all(|c| word.contains(c))
         {
             results.push(word);
         }
